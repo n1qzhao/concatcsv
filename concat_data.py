@@ -1,7 +1,7 @@
 import re
-import pandas as pd
 import os
 import glob
+import shutil
 
 idpattern = re.compile('F....')  # pattern for unit id like F1-01
 datepattern = re.compile('20\d{2}\d{2}\d{2}')  # pattern for date like 20170101
@@ -35,5 +35,10 @@ for id in idlist:
     for month in monthlist:
         path = [p for p in all_files if (id in p) & (month in p)]
         if path:  # if path is not empty
-            df = pd.concat((pd.read_csv(fpath, header=0, index_col=None, encoding="gb2312") for fpath in path))
-            df.to_csv(os.path.join(rootDIR, id + '_'+ month + '.csv'), header=0, index=False, encoding="gb2312" )
+            with open(os.path.join(rootDIR, id + '_'+ month + '.csv'), 'wb') as outfile:
+                for i, fname in enumerate(path):
+                    with open(fname, 'rb') as infile:
+                        if i != 0:
+                            infile.readline()  # Throw away header on all but first file
+                        shutil.copyfileobj(infile, outfile) # Block copy rest of file from input to output without parsing
+
